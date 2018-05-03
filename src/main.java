@@ -2,10 +2,9 @@ import java.util.Scanner;
 
 import javax.swing.JFrame;
 
+import GeneticAI.Gene;
 import controller.MouseInput;
 import model.Game;
-import model.Move;
-import model.Position;
 import view.GamePanel;
 
 public class main {
@@ -15,6 +14,18 @@ public class main {
 		Scanner sc = new Scanner(System.in);
 		Game g1 = new Game();
 		g1.printGame();
+		
+		
+		
+		
+		Gene gene1 = new Gene("12345678");
+		
+		for(int i = 0; i<15; i++){
+			gene1.print();
+			gene1.mutate();
+			
+			
+		}
 		
 		
 		

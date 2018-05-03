@@ -5,16 +5,17 @@ import java.util.Observable;
 import java.util.Observer;
 
 import AI.AIManager;
+import GeneticAI.GeneticAI;
 
 public class Game extends Observable implements Observer{
 	Board board;
 	Color turn;
-	AIManager AI;
+	GeneticAI AI;
 	public Game(){
 		board = new Board();
 		turn = Color.WHITE;
 		
-		AI = new AIManager(this,Color.BLACK);
+		AI = new GeneticAI(this,Color.BLACK);
 	}
 	
 	public Board getBoard(){
