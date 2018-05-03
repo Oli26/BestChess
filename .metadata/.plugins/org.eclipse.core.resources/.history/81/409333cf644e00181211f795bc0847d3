@@ -1,0 +1,323 @@
+package model;
+
+import java.awt.Color;
+import java.util.ArrayList;
+import java.util.List;
+
+public class Board {
+	Set whiteSet;
+	Set blackSet;
+	
+	public Board(){
+		whiteSet = new Set(Color.WHITE);
+		blackSet = new Set(Color.BLACK);
+	}
+	
+	
+	public List<Piece> getAllPieces(){
+		List<Piece> pieces = whiteSet.getPieces();
+		pieces.addAll(blackSet.getPieces());
+		return pieces;
+	}
+	
+	public Piece findAtPosition(Position p){
+		Piece returnPiece = null;
+		
+		returnPiece = whiteSet.findAtPosition(p);
+		
+		if(returnPiece == null){
+			return blackSet.findAtPosition(p);
+		}
+		return returnPiece;
+	}
+	
+	public List<Move> getPossibleMoves(Color c){
+		
+		List<Move> moves = new ArrayList<Move>();
+		Set s1;
+		Set s2;
+		
+		// Chose set based on input color
+		if(c == Color.WHITE){
+			s1 = whiteSet;
+			s2 = blackSet;
+		}else{
+			s1 = blackSet;
+			s2 = whiteSet;
+		}
+		
+		// GET ALL POSSIBLE ABSTRACT MOVEMENT
+		moves.addAll(s1.getAllAbstractMovement());
+		
+
+		// CHECK FOR NON ALLOWED MOVES
+		for(int i=0;i<moves.size(); i++){
+			if(movePossible(moves.get(i)) == false){
+				moves.remove(i);
+			}
+		}	
+		
+
+		// finally we return our trimmed list!
+		return moves;
+	}
+		
+	public boolean movePossible(Move m){
+		Piece moving = findAtPosition(m.getPosition1());
+		Piece hit = findAtPosition(m.getPosition2());
+		// Make sure there is a piece at inital position
+		if(findAtPosition(m.getPosition1()) == null){
+			return false;
+		}
+		
+		
+		
+		// SPECIAL CASTLING CASE /////////
+		
+		boolean canCastle = true;
+		Piece castleInUse;
+		if(m.getPosition1().getX() == 3 && m.getPosition1().getY() == 7 && moving.hasMoved == false){
+			//// KING SIDE BLACK
+			castleInUse = findAtPosition(new Position(0,7));
+			if(m.getPosition2().getX() == 1 && m.getPosition2().getY() == 7 && castleInUse != null && castleInUse.hasMoved == false){
+				if(findAtPosition(new Position(6,7)) != null){
+					canCastle = false;
+				}
+				if(findAtPosition(new Position(5,7)) != null){
+					canCastle = false;
+				}
+				
+			}
+			//// QUEEN SIDE BLACK
+			if(m.getPosition2().getX() == 5 && m.getPosition2().getY() == 7 && castleInUse != null && castleInUse.hasMoved == false){
+				if(findAtPosition(new Position(1,7)) != null){
+					canCastle = false;
+				}
+				if(findAtPosition(new Position(2,7)) != null){
+					canCastle = false;
+				}
+				if(findAtPosition(new Position(3,7)) != null){
+					canCastle = false;
+				}
+				
+			}
+			
+			
+		}
+		if(m.getPosition1().getX() == 3 && m.getPosition1().getY() == 0 && moving.hasMoved == false){
+			
+			//// KING SIDE WHITE	
+			
+			if(m.getPosition2().getX() == 1 && m.getPosition2().getY() == 0 && castleInUse != null && castleInUse.hasMoved == false ){
+				if(findAtPosition(new Position(6,0)) != null){
+					canCastle = false;
+				}
+				if(findAtPosition(new Position(5,0)) != null){
+					canCastle = false;
+				}
+				
+			}
+			//// QUEEN SIDE WHITE
+			if(m.getPosition2().getX() == 5 && m.getPosition2().getY() == 0 && castleInUse != null && castleInUse.hasMoved == false){
+				if(findAtPosition(new Position(1,7)) != null){
+					canCastle = false;
+				}
+				if(findAtPosition(new Position(2,7)) != null){
+					canCastle = false;
+				}
+				if(findAtPosition(new Position(3,7)) != null){
+					canCastle = false;
+				}
+				
+			}
+		}
+		
+		////////////////////////////////
+		
+		
+		
+		
+		// CHECK MOVE IS ABSTRACTLY POSSIBLE
+		List<Move> moves = moving.abstractMovement();
+		
+		boolean pass = false;
+		for(int i = 0; i< moves.size(); i++){
+			if(m.isTheSame(moves.get(i))){
+				pass = true;
+			}
+		}
+
+		if(pass == false){
+			return false;
+		}
+		
+		// CHECK IS POSITION IS FULL FROM OWN UNIT
+		if(hit != null){
+			if(hit.getColor() ==  moving.getColor()){
+				return false;
+			}
+		}
+		
+		// CHECK MOVE IS ON BOARD
+		int x = m.getPosition2().getX();
+		int y = m.getPosition2().getY();
+		if(x < 0 || x > 7){
+			return false;
+		}else if(y < 0 || y > 7){
+			return false;
+		}
+		
+		// CHECK MOVE IS NOT BLOCKED
+		int x1 = m.getPosition1().getX();
+		int y1 = m.getPosition1().getY();
+		int x2 = m.getPosition2().getX();
+		int y2 = m.getPosition2().getY();
+		//System.out.println(x1 + "|" + y1 + "|" + x2 + "|" + y2);
+		
+		int xDiff = Math.abs(x1-x2);
+		int yDiff = Math.abs(y1-y2);
+		
+		if(xDiff == yDiff){
+			// Is queen or bishop or king or pawn NO GOOD ENOUGH YET
+			
+				
+				if(x1 > x2){
+					if(y1 > y2){
+						for(int n=1;n<xDiff; n++){
+							if(findAtPosition(new Position(x1-n,y1-n)) != null){
+								return false;
+							}
+						}
+					}else{
+						for(int n=1;n<xDiff; n++){
+							if(findAtPosition(new Position(x1-n,y1+n)) != null){
+								return false;
+							}
+						}
+					}		
+				}else{
+					if(y1 > y2){
+						for(int n=1;n<xDiff; n++){
+							if(findAtPosition(new Position(x1+n,y1-n)) != null){
+								return false;
+							}
+						}
+					}else{
+						for(int n=1;n<xDiff; n++){
+							if(findAtPosition(new Position(x1+n,y1+n)) != null){
+								return false;
+							}
+						}
+					}
+				}
+				
+				
+			
+		}
+		
+		if(xDiff == 0){
+			// Is queen or rook
+			for(int n=1;n<yDiff; n++){
+				if(findAtPosition(new Position(x1,Math.min(y1, y2)+n)) != null){
+					return false;
+				}
+			}
+			
+			
+			// pawns cant take forward
+			if(moving.getType() == "Pawn"){
+				if(hit != null){
+					return false;
+				}
+			}
+			
+		}
+		
+		if(yDiff == 0){
+			// Is queen or rook or pawn
+			for(int n=1;n<xDiff; n++){
+				if(findAtPosition(new Position(Math.min(x1,x2)+n,y1)) != null){
+					return false;
+				}
+			}
+			
+		}	
+		
+		
+		
+		
+		
+		return true;
+	}
+	
+	public boolean inCheck(Color c){
+		Piece king;
+		List<Move> moves;
+		if(c == Color.WHITE){
+			king = whiteSet.findPiece("King").get(0);
+			moves = blackSet.getAllAbstractMovement();
+		}else{
+			king=blackSet.findPiece("King").get(0);
+			moves = whiteSet.getAllAbstractMovement();
+		}
+
+		
+		for(int i=0;i<moves.size();i++){
+			if(moves.get(i).getPosition2().isTheSame(king.getPosition()) && movePossible(moves.get(i))){
+				return true;
+			}
+			
+		}
+		
+		return false;
+	}
+	
+	public boolean isCheckMate(Color c){
+		boolean checkmate = true;
+		Piece king;
+		List<Move> moves;
+		if(c == Color.WHITE){
+			king = whiteSet.findPiece("King").get(0);
+			moves = whiteSet.getAllAbstractMovement();
+		}else{
+			king=blackSet.findPiece("King").get(0);
+			moves = blackSet.getAllAbstractMovement();
+		}
+
+		for(int i=0 ;i<moves.size(); i++){
+			if(movePossible(moves.get(i))){		
+				Piece p = findAtPosition(moves.get(i).getPosition1());
+				Piece hit = findAtPosition(moves.get(i).getPosition2());
+				
+				if(hit !=null){
+					hit.kill();
+				}
+				int saveX = p.getPosition().getX();
+				int saveY = p.getPosition().getY();
+				p.getPosition().setPosition(moves.get(i).getPosition2());
+				
+				
+				if(!inCheck(c)){
+					Piece temp = findAtPosition(new Position(7,5));
+					if(temp == null){
+						System.out.println("Null");
+					}else{
+						System.out.println(temp.getType());
+					}
+					System.out.printf("Called for move (%d,%d) -> (%d,%d)\n", saveX, saveY, moves.get(i).getPosition2().getX(), moves.get(i).getPosition2().getY());
+					checkmate = false;
+				}
+				
+				//reset stuff we changed
+				p.getPosition().setPosition(new Position(saveX, saveY));
+
+				if(hit !=null){
+					hit.revive();
+				}
+			}
+		}
+		return checkmate;
+	}
+	
+	
+}
