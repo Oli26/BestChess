@@ -17,7 +17,7 @@ public class main {
 		
 		
 		
-		
+		/*
 		Gene gene1 = new Gene("12345678");
 		
 		for(int i = 0; i<15; i++){
@@ -27,7 +27,7 @@ public class main {
 			
 		}
 		
-		
+		*/
 		
 		/////////// GUI ///////////////////
 		
@@ -41,8 +41,6 @@ public class main {
 		frame.setSize(528, 550);
 		frame.setDefaultCloseOperation(1);
 		frame.setVisible(true);
-		
-		
 		
 		
 		

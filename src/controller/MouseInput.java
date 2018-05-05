@@ -43,7 +43,6 @@ public class MouseInput extends MouseInputAdapter {
 	        		game.AIMove();
 	    	        System.out.printf("Trying: (%d,%d)->(%d,%d) : Success\n", xOldSquare, yOldSquare, xSquare, ySquare);
 	        	}else{
-
 	    	        System.out.printf("Trying: (%d,%d)->(%d,%d): Failed\n", xOldSquare, yOldSquare, xSquare, ySquare);
 	        	}
 	        	

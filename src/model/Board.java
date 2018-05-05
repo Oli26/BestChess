@@ -15,7 +15,8 @@ public class Board {
 	
 	
 	public List<Piece> getAllPieces(){
-		List<Piece> pieces = whiteSet.getPieces();
+		List<Piece> pieces = new ArrayList<Piece>();
+		pieces.addAll(whiteSet.getPieces());
 		pieces.addAll(blackSet.getPieces());
 		return pieces;
 	}

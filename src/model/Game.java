@@ -4,17 +4,19 @@ import java.awt.Color;
 import java.util.Observable;
 import java.util.Observer;
 
-import AI.AIManager;
 import GeneticAI.GeneticAI;
+import controller.MoveOperation;
+import controller.UndoManager;
 
 public class Game extends Observable implements Observer{
 	Board board;
 	Color turn;
 	GeneticAI AI;
+	UndoManager undoManager;
 	public Game(){
 		board = new Board();
 		turn = Color.WHITE;
-		
+		undoManager = new UndoManager();
 		AI = new GeneticAI(this,Color.BLACK);
 	}
 	
@@ -30,14 +32,18 @@ public class Game extends Observable implements Observer{
 		}	
 	}
 	
+	public Color getTurn(){
+		return turn;
+	}
+	
 	
 	public void AIMove(){
-		
 		AI.AIMove();
 	}
 	
+	
 	public String makeMove(Move m){
-		System.out.printf(turn + " is attempting move (%d,%d)->(%d,%d)", m.getPosition1().getX(), m.getPosition1().getY(), m.getPosition2().getX(), m.getPosition2().getY());
+		//System.out.printf(turn + " is attempting move (%d,%d)->(%d,%d)\n", m.getPosition1().getX(), m.getPosition1().getY(), m.getPosition2().getX(), m.getPosition2().getY());
 		if(board.movePossible(m)){
 			
 			
@@ -74,27 +80,30 @@ public class Game extends Observable implements Observer{
 			
 		
 			toMove.setMoved();
-			
-			System.out.println("Type:" + toMove.getType() + ". New y ="+ m.getPosition2().getY());
+			boolean converted = false;
 			if(toMove.getType() == "Pawn"){
 				if(turn == Color.BLACK && m.getPosition2().getY() == 0){
-					System.out.println("Called1");
 					board.convertToQueen(toMove);
+					converted = true;
 					
 				}else if(turn == Color.WHITE && m.getPosition2().getY() == 7){
-					System.out.println("Called1");
 					board.convertToQueen(toMove);
-					
+					converted = true;
 				}
 			}
 			
 			updateCustom();
 			flipTurn();	
+			undoManager.newOperation(new MoveOperation(m, toMove, hit, converted));
 			return "moved";
 		}
 		return "moved failed: general";
 	}
 	
+	public void undoMove(){
+		undoManager.undo();
+		flipTurn();
+	}
 	
 	public void printGame(){
 		for(int y=7; y>=0; y--){

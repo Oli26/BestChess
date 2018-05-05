@@ -86,11 +86,27 @@ public class Gene {
 		return new Gene(sequence);
 	}
 	
+	
+	
 	public int getAtomicValue(int valueIndex){
-		char[] charArray = new char[2];
-		int offset = valueIndex*2;
-		int value = Integer.parseInt(charArray[0+offset] + charArray[1+offset] + "");
+		int offset = (valueIndex-1)*2;
+		
+		int valueOne = Integer.parseInt(sequence[0+offset]+"");
+		int valueTwo = Integer.parseInt(sequence[1+offset]+"");
+		int value = valueOne*10 + valueTwo;
 		return value;
 	}
+	
+	public float convertToFloat(){
+		float value = 0;
+		
+		value += getAtomicValue(1);
+		value += getAtomicValue(2);
+		
+		return value;
+		
+	}
+	
+	
 	
 }

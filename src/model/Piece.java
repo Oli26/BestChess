@@ -40,9 +40,14 @@ public class Piece {
 		
 		return image;
 	}
-	
+	public boolean hasMoved(){
+		return hasMoved;
+	}
 	public void setMoved(){
 		hasMoved = true;
+	}
+	public void resetMoved(){
+		hasMoved = false;
 	}
 	public Color getColor(){
 		return color;
