@@ -35,12 +35,12 @@ public class Board {
 	public List<Move> getPossibleMoves(Color c){
 		
 		List<Move> moves = new ArrayList<Move>();
-		Set s1;
+		Set s1 = null;
 		
 		// Chose set based on input color
 		if(c == Color.WHITE){
 			s1 = whiteSet;
-		}else{
+		}else if(c == Color.BLACK){
 			s1 = blackSet;
 		}
 		
@@ -66,10 +66,15 @@ public class Board {
 		Piece moving = findAtPosition(m.getPosition1());
 		Piece hit = findAtPosition(m.getPosition2());
 		// Make sure there is a piece at inital position
-		if(findAtPosition(m.getPosition1()) == null){
+
+
+		if(moving == null){
 			return false;
 		}
 		
+
+
+
 		
 		
 		// SPECIAL CASTLING CASE ///////// STILL NEED TO CHECK FOR ATTACKS THROUGH THE CONNECTING SQUARES
@@ -118,6 +123,8 @@ public class Board {
 			
 			
 		}
+
+		
 		if(m.getPosition1().getX() == 3 && m.getPosition1().getY() == 0 && moving.hasMoved == false){
 			
 			//// KING SIDE WHITE	
@@ -178,6 +185,7 @@ public class Board {
 		}
 
 		if(pass == false){
+			System.out.println("Move denied, is not in abstract movement");
 			return false;
 		}
 		
@@ -278,10 +286,6 @@ public class Board {
 			
 		}	
 		
-		
-		
-		
-		
 		return true;
 	}
 	
@@ -334,12 +338,12 @@ public class Board {
 				
 				if(!inCheck(c)){
 					Piece temp = findAtPosition(new Position(7,5));
-					if(temp == null){
-						System.out.println("Null");
-					}else{
-						System.out.println(temp.getType());
-					}
-					System.out.printf("Called for move (%d,%d) -> (%d,%d)\n", saveX, saveY, moves.get(i).getPosition2().getX(), moves.get(i).getPosition2().getY());
+					//if(temp == null){
+						//System.out.println("Null");
+					//}else{
+						//System.out.println(temp.getType());
+					//}
+					//System.out.printf("Called for move (%d,%d) -> (%d,%d)\n", saveX, saveY, moves.get(i).getPosition2().getX(), moves.get(i).getPosition2().getY());
 					checkmate = false;
 				}
 				

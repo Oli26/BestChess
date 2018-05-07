@@ -4,6 +4,9 @@ import java.awt.Color;
 import java.util.Observable;
 import java.util.Observer;
 
+import javax.swing.JFrame;
+import javax.swing.JOptionPane;
+
 import GeneticAI.GeneticAI;
 import controller.MoveOperation;
 import controller.UndoManager;
@@ -42,21 +45,19 @@ public class Game extends Observable implements Observer{
 	}
 	
 	
-	public String makeMove(Move m){
+	public String makeMove(Move m, boolean real){
 		//System.out.printf(turn + " is attempting move (%d,%d)->(%d,%d)\n", m.getPosition1().getX(), m.getPosition1().getY(), m.getPosition2().getX(), m.getPosition2().getY());
 		if(board.movePossible(m)){
-			
-			
-			
 			Piece toMove = board.findAtPosition(m.getPosition1());
 			Piece hit = board.findAtPosition(m.getPosition2());
-			
+			boolean hasMoved = toMove.hasMoved();
 			if(toMove.getColor() != turn){
 				return "Not your turn";
 			}
 			
 			toMove.position.setX(m.getPosition2().getX());
 			toMove.position.setY(m.getPosition2().getY());
+			//System.out.println("Got here for move :" + m.getMoveString());
 			
 			if(hit != null){
 				hit.kill();
@@ -64,14 +65,22 @@ public class Game extends Observable implements Observer{
 			
 			
 			if(board.inCheck(turn)){
-				if(board.isCheckMate(turn)){
-					return "Checkmate";
-				}
-				System.out.println("Cant move because it ends in check!");
+
+				//System.out.println("Cant move because it ends in check!");
 				toMove.position.setX(m.getPosition1().getX());
 				toMove.position.setY(m.getPosition1().getY());
 				if(hit != null)
 					hit.revive();
+				if(hasMoved == false)
+					toMove.resetMoved();
+				
+				if(board.isCheckMate(turn)){
+					if(real){
+						JFrame frame = new JFrame();
+						JOptionPane.showMessageDialog(frame,"Checkmate, Game over!");
+					}
+					return "Checkmate";
+				}
 				return "moved failed: check";
 			}
 			
@@ -79,7 +88,7 @@ public class Game extends Observable implements Observer{
 			
 			
 		
-			toMove.setMoved();
+			
 			boolean converted = false;
 			if(toMove.getType() == "Pawn"){
 				if(turn == Color.BLACK && m.getPosition2().getY() == 0){
@@ -94,7 +103,9 @@ public class Game extends Observable implements Observer{
 			
 			updateCustom();
 			flipTurn();	
-			undoManager.newOperation(new MoveOperation(m, toMove, hit, converted));
+			undoManager.newOperation(new MoveOperation(this,m, toMove, hit, converted));
+			toMove.setMoved();
+			//System.out.println("move success: " + m.getMoveString());
 			return "moved";
 		}
 		return "moved failed: general";

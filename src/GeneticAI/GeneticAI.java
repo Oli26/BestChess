@@ -4,6 +4,7 @@ import java.awt.Color;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.Stack;
 
 import model.Board;
 import model.Game;
@@ -36,15 +37,15 @@ public class GeneticAI {
 		
 		do{
 			System.out.println("AI tried to move!");
-			move = generateMove(1,color);
+			move = generateMove(4,color);
 			System.out.println(move.getMoveString());
-			returnValue = game.makeMove(move);
+			returnValue = game.makeMove(move, true);
 			if(returnValue == "Checkmate"){
 				return;
 			}
 			if(returnValue == "Not your turn"){
 				game.flipTurn();
-				returnValue = game.makeMove(move);
+				returnValue = game.makeMove(move, true);
 			}
 			
 			System.out.println(returnValue);
@@ -57,7 +58,8 @@ public class GeneticAI {
 	
 	public Move generateMove(int depth, Color c){
 		
-		List<Move> moves = board.getPossibleMoves(c);
+		List<Move> moves = new ArrayList<Move>();
+		moves.addAll(board.getPossibleMoves(c));
 		
 
 		Random r = new Random();
@@ -65,7 +67,8 @@ public class GeneticAI {
 		float bestValue = -10000;
 		List<Move> bestMoves = new ArrayList<Move>();
 		for(int i = 0; i< moves.size(); i++){
-			float newValue = -valueMove(moves.get(i), c, depth);
+			System.out.println("Testing move:" + moves.get(i).getMoveString());
+			float newValue = valueMoveTwo(moves.get(i), depth, c);
 			if(newValue > bestValue){
 				bestValue = newValue;
 				bestMoves = new ArrayList<Move>();
@@ -90,44 +93,7 @@ public class GeneticAI {
 	
 
 	
-	public float valueMove(Move m, Color c, int depth){
-		Gene gene = chromosome1.getGene(0); // First value is the amount of positions we want to extract from the board.
-		//System.out.println("Valuing move:" + m.getMoveString());
-		Gene pieceWeighting = chromosome1.getGene(gene.getAtomicValue(1));
-		
-		
-		if(depth == 0){
-			//System.out.println("Attempting move " + m.getMoveString());
-			String result = game.makeMove(m);
-			if(result == "Not your turn"){
-				game.flipTurn();
-				result = game.makeMove(m);
-			}
-			if(result == "moved"){
-				float value = evaluateBoard(pieceWeighting, c);
-				//System.out.println("Returning value of "+ value);
-				game.undoMove();
-				return value;
-			}
-			return -9899;
-		}else{
-			List<Move> moves = game.getBoard().getPossibleMoves(c);
-			float bestMoveValue = -9989;
-		
-			for(int i=0; i<moves.size();i++){
-				float newValue = valueMove(moves.get(i), getOtherColor(c), depth-1);
-				if(newValue > bestMoveValue){
-					bestMoveValue = newValue;
-				}
-			}
-			//System.out.println(".........");
-			return bestMoveValue;
-			
-			
-		}
-		
-		
-	}
+
 	
 
 	public float evaluateBoard(Gene pieceWeighting, Color turn){
@@ -228,5 +194,143 @@ public class GeneticAI {
 	}
 	
 	
+	public float makeMoveRecordValue(Move m, Color c){
+		String result = game.makeMove(m, false);
+		if(result == "Not your turn"){
+			game.flipTurn();
+			result = game.makeMove(m, false);
+		}
+		if(result == "Checkmate"){
+			return 9999;
+		}
+		if(result != "moved"){
+			return -9999;
+		}
+		float value = evaluateBoard(chromosome1.getGene(0), c);
+		
+		game.undoMove();
+		//System.out.println("Move Undo");
+		return value;
+	}
+	
+	public float valueMoveTwo(Move m, int depth, Color c){
+		
+		String offset = new String();
+		for(int i =0; i<(4-depth);i++){
+			offset += "    ";
+		}
+		
+		Gene gene = chromosome1.getGene(0); 
+		Gene pieceWeighting = chromosome1.getGene(gene.getAtomicValue(1));
+		
+		if(depth == 0){
+			float value = makeMoveRecordValue(m,c);
+			if(c ==Color.WHITE){
+				System.out.println(offset+"White picked move:" + m.getMoveString());
+			}else{
+				System.out.println(offset+"Black picked move:" + m.getMoveString());
+			}
+			System.out.println(offset+"Was base, value = " + value);
+			return value;
+		}
+		
+		///////////// MAKE MOVE ///////////////////
+		String status = game.makeMove(m, false);
+		if(c ==Color.WHITE){
+			System.out.println(offset+"White picked move:" + m.getMoveString());
+		}else{
+			System.out.println(offset+"Black picked move:" + m.getMoveString());
+		}
+		if(status == "Checkmate"){
+			System.out.println(offset+"Checkmate reachable");
+			return 10000;
+		}
+		if(status != "moved"){
+			return -9999;
+		}
+		
+		///////////////////////////////////////////
+		
+		
+		
+		
+		////////// FLIP TURN AND GEN COUNTER MOVES //////////////////
+		c = getOtherColor(c);
+		if(c ==Color.WHITE){
+			System.out.println(offset+"White generates moves");
+		}else{
+			System.out.println(offset+"Black generates moves");
+		}		
+		
+		List<Move> moves = new ArrayList<Move>();
+		moves.addAll(game.getBoard().getPossibleMoves(c));
+		
+		////////////////////////////////////////////////////////////////
+		
+		
+		
+		
+		///////// TEST ALL COUNTER MOVES AND SELECT BEST //////////////
+		
+		float[] moveValues = new float[moves.size()];
+		for(int i = 0; i<moves.size(); i++){
+			float newValue = makeMoveRecordValue(moves.get(i), c);
+			//float newValue = valueMoveTwo(moves.get(i), 1, c);
+			System.out.println(offset+"aux:" + moves.get(i).getMoveString() + "(" + newValue + ")");
+			moveValues[i] = newValue;
+		}
+			
+			
+		List<Move> passedMoves = new ArrayList<Move>();
+		float highest = -9998;
+		int highestIndex = 0;
+		int amountOfChildren = 1;
+		for(int i = 0; i<amountOfChildren; i++){
+			for(int j = 0; j<moves.size(); j++){
+				if(moveValues[j] > highest){
+					highest = moveValues[j];
+					highestIndex = j;
+				}
+			}
+			passedMoves.add(moves.get(highestIndex));
+			moveValues[highestIndex] = -9999;
+		}
+			
+			
+		float[] returnValues = new float[amountOfChildren];
+		for(int i = 0; i<amountOfChildren; i++){
+			 returnValues[i] = valueMoveTwo(passedMoves.get(i), depth-1, c);
+		}
+				
+		highest = -9999;
+		for(int i = 0; i<amountOfChildren; i++){
+			if(returnValues[i] > highest){
+				highest = returnValues[i];
+			}
+		}
+			
+		/*	
+		}else{
+			float lowest = 10000;
+			for(int i = 0; i<moves.size(); i++){
+				
+				float newValue = makeMoveRecordValue(moves.get(i), c);
+				System.out.println("aux:" + moves.get(i).getMoveString() + "(" + newValue + ")");
+				if(newValue < lowest){
+					lowest = newValue;
+					bestMove = moves.get(i);
+				}
+			}
+		}	
+		*/
+		
+		
+		////////////////////////////////////////////////////////////////
+		
+		
+
+		game.undoMove();
+		return highest;
+	}
 	
 }

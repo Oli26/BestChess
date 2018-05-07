@@ -38,10 +38,11 @@ public class MouseInput extends MouseInputAdapter {
 	        int ySquare = event.getY()/65;
 	        
 	        if(-1<xSquare && xSquare<8 && ySquare>-1 && ySquare<8 && !(xOldSquare==xSquare && yOldSquare==ySquare)){
-	        	String result = game.makeMove(new Move(new Position(xOldSquare, yOldSquare), new Position(xSquare, ySquare)));
+	        	String result = game.makeMove(new Move(new Position(xOldSquare, yOldSquare), new Position(xSquare, ySquare)), true);
 	        	if(result == "moved"){
-	        		game.AIMove();
 	    	        System.out.printf("Trying: (%d,%d)->(%d,%d) : Success\n", xOldSquare, yOldSquare, xSquare, ySquare);
+	        		game.AIMove();
+
 	        	}else{
 	    	        System.out.printf("Trying: (%d,%d)->(%d,%d): Failed\n", xOldSquare, yOldSquare, xSquare, ySquare);
 	        	}
